@@ -12,7 +12,7 @@ for ($i = 0; $i < count($sitesArray); $i++) {
 
     $path = DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . "www" . DIRECTORY_SEPARATOR . $sitesArray[$i] . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR;
 
-//WORDPRESS version file 
+//WORDPRESS version file
     $wordpressFilePath = $path . "wp-includes/version.php";
 //JOOMLA version file
     $joomlaFilePath = $path . "language/pt-BR/pt-BR.xml";
@@ -53,6 +53,6 @@ for ($i = 0; $i < count($sitesArray); $i++) {
 
 }
 
-$arquivo = fopen('versaoDoCMS.csv', 'w');
-fwrite($arquivo, $source);
-fclose($arquivo);
+$file = fopen('cmsVersion.csv', 'w');
+fwrite($file, $source);
+fclose($file);
