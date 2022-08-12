@@ -2,8 +2,14 @@
 $sitesArray = scandir(DIRECTORY_SEPARATOR . "var" . DIRECTORY_SEPARATOR . "www" . DIRECTORY_SEPARATOR);
 $source = "Site,CMS,Version,Beta\n";
 
-for ($i = 0; $i < count($sitesArray); $i++) {
-    $path = DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . "www" . DIRECTORY_SEPARATOR . $sitesArray[$i] . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR;
+foreach ($sitesArray as $site) {
+    if ($site === "." || $site === ".." || strpos($site, "www.") === false) {
+        unset($sitesArray[array_search($site, $sitesArray)]);
+    }
+}
+
+foreach($sitesArray as $site){
+    $path = DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . "www" . DIRECTORY_SEPARATOR . $site . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR;
 
 //WORDPRESS version file
     $wordpressFilePath = $path . "wp-includes/version.php";
@@ -24,21 +30,21 @@ for ($i = 0; $i < count($sitesArray); $i++) {
             $wordpressCommand = shell_exec("grep '\$wp_version =' " . $wordpressFilePath);
             $subst = '';
             $result = preg_replace($re, $subst, $wordpressCommand);
-            $source .= "$sitesArray[$i],WORDPRESS," . $result;
+            $source .= "$site,WORDPRESS," . $result;
             break;
         case file_exists($joomlaFilePath):
             $re = '/(\s{0,}<version>)|(<\/version>)/m';
             $joomlaCommand = shell_exec("grep '<\/version>' " . $joomlaFilePath);
             $subst = '';
             $result = preg_replace($re, $subst, $joomlaCommand);
-            $source .= "$sitesArray[$i],JOOMLA," . $result;
+            $source .= "$site,JOOMLA," . $result;
             break;
         case file_exists($drupalFilePath):
             $drupalCommand = shell_exec("grep -m1 -e Drupal " . $drupalFilePath);
             $re = '/(Drupal )|(, \d{0,4}-\d{0,2}-\d{0,2})/m';
             $str = $drupalCommand;
             $subst = '';
-            $source .= "$sitesArray[$i],DRUPAL," . preg_replace($re, $subst, $str);
+            $source .= "$site,DRUPAL," . preg_replace($re, $subst, $str);
             break;
         case file_exists($drupal9FilePath):
             $drupalCommand = shell_exec("grep -m1 -e VERSION " . $drupal9FilePath);
@@ -46,21 +52,21 @@ for ($i = 0; $i < count($sitesArray); $i++) {
             $str = $drupalCommand;
             $subst = '';
             $result = preg_replace($re, $subst, $str);
-            $source .= "$sitesArray[$i],DRUPAL," . $result;
+            $source .= "$site,DRUPAL," . $result;
             break;
         case file_exists($ojsFilePath):
             $ojsCommand = shell_exec("php $ojsFilePath check | grep 'Code version:'");
-            $source .= "$sitesArray[$i],OJS," . trim(str_replace('Code version:      ', "", $ojsCommand), "");
+            $source .= "$site,OJS," . trim(str_replace('Code version:      ', "", $ojsCommand), "");
             break;
         case file_exists($moodleFilePath):
             $re = '/(\$release  = \')|( \(.{0,})/m';
             $moodleCommand = shell_exec("grep '\$release' $moodleFilePath");
             $subst = '';
             $result = preg_replace($re, $subst, $moodleCommand);
-            $source .= "$sitesArray[$i],MOODLE,$result";
+            $source .= "$site,MOODLE,$result";
             break;
         default:
-            $source .= "$sitesArray[$i],Unknown,Unknown\n";
+            $source .= "$site,Unknown,Unknown\n";
     }
 }
 $file = fopen('cmsVersion.csv', 'w');
