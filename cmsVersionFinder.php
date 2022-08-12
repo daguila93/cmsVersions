@@ -3,7 +3,6 @@ $sitesArray = scandir(DIRECTORY_SEPARATOR . "var" . DIRECTORY_SEPARATOR . "www" 
 $source = "Site,CMS,Version,Beta\n";
 
 for ($i = 0; $i < count($sitesArray); $i++) {
-
     $path = DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . "www" . DIRECTORY_SEPARATOR . $sitesArray[$i] . DIRECTORY_SEPARATOR . "public_html" . DIRECTORY_SEPARATOR;
 
 //WORDPRESS version file
@@ -12,8 +11,12 @@ for ($i = 0; $i < count($sitesArray); $i++) {
     $joomlaFilePath = $path . "language/pt-BR/pt-BR.xml";
 //DRUPAL version file
     $drupalFilePath = $path . "CHANGELOG.txt";
+//DRUPAL version file
+    $drupal9FilePath = $path . "core/lib/Drupal.php";
 //OJS version file
     $ojsFilePath = $path . "tools/upgrade.php";
+//MOODLE version file
+    $moodleFilePath = $path . "version.php";
 
     switch ($path) {
         case file_exists($wordpressFilePath):
@@ -37,15 +40,29 @@ for ($i = 0; $i < count($sitesArray); $i++) {
             $subst = '';
             $source .= "$sitesArray[$i],DRUPAL," . preg_replace($re, $subst, $str);
             break;
+        case file_exists($drupal9FilePath):
+            $drupalCommand = shell_exec("grep -m1 -e VERSION " . $drupal9FilePath);
+            $re = '/(..const VERSION = \')|(\';)/m';
+            $str = $drupalCommand;
+            $subst = '';
+            $result = preg_replace($re, $subst, $str);
+            $source .= "$sitesArray[$i],DRUPAL," . $result;
+            break;
         case file_exists($ojsFilePath):
             $ojsCommand = shell_exec("php $ojsFilePath check | grep 'Code version:'");
             $source .= "$sitesArray[$i],OJS," . trim(str_replace('Code version:      ', "", $ojsCommand), "");
+            break;
+        case file_exists($moodleFilePath):
+            $re = '/(\$release  = \')|( \(.{0,})/m';
+            $moodleCommand = shell_exec("grep '\$release' $moodleFilePath");
+            $subst = '';
+            $result = preg_replace($re, $subst, $moodleCommand);
+            $source .= "$sitesArray[$i],MOODLE,$result";
             break;
         default:
             $source .= "$sitesArray[$i],Unknown,Unknown\n";
     }
 }
-
 $file = fopen('cmsVersion.csv', 'w');
 fwrite($file, $source);
 fclose($file);
