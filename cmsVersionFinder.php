@@ -20,7 +20,7 @@ foreach($sitesArray as $site){
 //DRUPAL version file
     $drupal9FilePath = $path . "core/lib/Drupal.php";
 //OJS version file
-    $ojsFilePath = $path . "tools/upgrade.php";
+    $ojsFilePath = $path . "dbscripts/xml/version.xml";
 //MOODLE version file
     $moodleFilePath = $path . "version.php";
 
@@ -55,8 +55,12 @@ foreach($sitesArray as $site){
             $source .= "$site,DRUPAL," . $result;
             break;
         case file_exists($ojsFilePath):
-            $ojsCommand = shell_exec("php $ojsFilePath check | grep 'Code version:'");
-            $source .= "$site,OJS," . trim(str_replace('Code version:      ', "", $ojsCommand), "");
+            $ojsCommand = shell_exec("grep '<release' " . $ojsFilePath);
+            $re = '/(\s)|(<release>)|(<\/release>)/m';
+            $str = $ojsCommand;
+            $subst = '';
+            $result = preg_replace($re, $subst, $str);
+            $source .= "$site,OJS,$result\n";
             break;
         case file_exists($moodleFilePath):
             $re = '/(\$release  = \')|( \(.{0,})/m';
